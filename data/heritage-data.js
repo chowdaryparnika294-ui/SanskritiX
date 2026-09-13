@@ -1,0 +1,8 @@
+// Local sample data. Edit this file to add more heritage locations.
+const heritageLocations=[
+{name:'Taj Mahal',location:'Agra, Uttar Pradesh',description:'An ivory-white marble mausoleum whose changing light has inspired visitors for centuries.',significance:'A UNESCO World Heritage Site and symbol of Mughal art, love, and craftsmanship.',symbol:'◒',color:'#9b624b'},
+{name:'Hampi',location:'Vijayanagara, Karnataka',description:'A boulder-strewn landscape filled with ruins of a once-thriving imperial capital.',significance:'Its temples and markets preserve the vision of the Vijayanagara Empire.',symbol:'⌂',color:'#697b5e'},
+{name:'Konark Sun Temple',location:'Konark, Odisha',description:'A stone chariot dedicated to Surya, the sun god, at the edge of the Bay of Bengal.',significance:'A masterpiece of 13th-century Kalinga architecture and sculpture.',symbol:'☀',color:'#b65d39'},
+{name:'Ajanta Caves',location:'Aurangabad, Maharashtra',description:'Rock-cut Buddhist caves where painted stories glow from two millennia ago.',significance:'Among India’s greatest surviving treasures of ancient art and devotion.',symbol:'◖',color:'#7e6650'},
+{name:'Rani ki Vav',location:'Patan, Gujarat',description:'An ornate stepwell descending through seven levels of sculpted stone.',significance:'An 11th-century water structure designed as an underground temple.',symbol:'▽',color:'#956f45'},
+{name:'Meenakshi Temple',location:'Madurai, Tamil Nadu',description:'A vibrant temple city of gateways, colour, ritual, and devotion.',significance:'A living centre of Dravidian architecture and Tamil culture.',symbol:'✣',color:'#466f72'}];
