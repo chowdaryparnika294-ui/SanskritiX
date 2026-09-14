@@ -1,217 +1,534 @@
-"""
-SanskritiX image-analysis API.
-
-Uploads are used in memory only. Gemini analysis carefully separates visible
-evidence, a possible identification, and AI-generated cultural context.
-"""
-
-import asyncio
-import json
-import logging
 import os
-from pathlib import Path
-from typing import Annotated, Any
+import json
+import base64
+from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
 from google import genai
 from google.genai import types
 
 
-logger = logging.getLogger(__name__)
+# =========================================================
+# ENVIRONMENT
+# =========================================================
 
-# backend/.env stays local and is ignored by Git. No key is in source code.
-load_dotenv(Path(__file__).with_name(".env"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_FILE = os.path.join(BASE_DIR, ".env")
+
+load_dotenv(dotenv_path=ENV_FILE, override=True)
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+GEMINI_MODEL = os.getenv(
+    "GEMINI_MODEL",
+    "gemini-3.6-flash"
+)
+
+GEMINI_IMAGE_MODEL = os.getenv(
+    "GEMINI_IMAGE_MODEL",
+    "gemini-2.5-flash-image"
+)
+
+
+# =========================================================
+# FASTAPI APP
+# =========================================================
 
 app = FastAPI(
     title="SanskritiX API",
-    description="Local API for careful cultural heritage photo discovery.",
-    version="0.2.0",
+    version="0.4.0",
+    description="AI-powered cultural heritage discovery and storytelling API."
 )
+
+
+# =========================================================
+# CORS
+# =========================================================
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5501",
+        "http://localhost:5501",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
     ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
-DEFAULT_MODEL = "gemini-3.6-flash"
 
-ANALYSIS_PROMPT = """
-You are a careful assistant for SanskritiX, an Indian cultural heritage discovery
-project. Analyze the supplied image conservatively.
+# =========================================================
+# GEMINI CLIENT
+# =========================================================
 
-Return only valid JSON with exactly these fields:
-{
-  "visible_evidence": ["specific things visibly present in the image"],
-  "possible_place": "specific place and state, or null",
-  "confidence": 0.0,
-  "cultural_elements": ["visual cultural or architectural features"],
-  "cultural_context": "brief, cautious interpretation or null",
-  "story": "short AI-generated cultural context, clearly cautious, or null",
-  "uncertainty": "what the image does not establish and why"
-}
+client = None
 
-Rules:
-- First report only what is visibly present. Do not describe details you cannot see.
-- Name a specific location only when distinctive visual evidence strongly supports it.
-- If evidence is insufficient, ambiguous, blurry, or generic, set possible_place to
-  null and confidence to 0.0. Explain the limitation in uncertainty.
-- Do not turn a possible identification into a fact.
-- Cultural context and story are AI-generated interpretations, not verified history.
-- Never invent dates, rulers, legends, inscriptions, or historical events.
-- confidence must be a number from 0.0 to 1.0.
-"""
-
-
-def get_extension(filename: str | None) -> str:
-    """Return a lower-case extension, or an empty string when one is missing."""
-    if not filename or "." not in filename:
-        return ""
-    return f".{filename.rsplit('.', 1)[-1].lower()}"
-
-
-def unavailable_response(message: str) -> dict[str, Any]:
-    """Keep the response shape predictable whenever analysis cannot run."""
-    return {
-        "status": "unavailable",
-        "message": message,
-        "visible_evidence": [],
-        "possible_place": None,
-        "confidence": None,
-        "cultural_elements": [],
-        "cultural_context": None,
-        "story": None,
-        "uncertainty": message,
-        "story_disclaimer": "No AI-generated cultural context is available.",
-    }
-
-
-def clean_analysis(data: Any) -> dict[str, Any]:
-    """Validate Gemini JSON before returning it to the frontend."""
-    if not isinstance(data, dict):
-        raise ValueError("Gemini did not return a JSON object.")
-
-    def text_or_none(value: Any) -> str | None:
-        return value.strip() if isinstance(value, str) and value.strip() else None
-
-    def string_list(value: Any) -> list[str]:
-        if not isinstance(value, list):
-            return []
-        return [item.strip() for item in value if isinstance(item, str) and item.strip()]
-
-    possible_place = text_or_none(data.get("possible_place"))
-    confidence = data.get("confidence")
-    if not isinstance(confidence, (int, float)) or isinstance(confidence, bool):
-        confidence = None
-    elif not 0 <= confidence <= 1:
-        confidence = None
-
-    uncertainty = text_or_none(data.get("uncertainty"))
-    if possible_place is None and not uncertainty:
-        uncertainty = "The image does not provide enough distinctive visual evidence for a specific place."
-
-    return {
-        "status": "success",
-        "message": "Image analyzed by Gemini. Treat possible locations as tentative.",
-        "visible_evidence": string_list(data.get("visible_evidence")),
-        "possible_place": possible_place,
-        "confidence": confidence,
-        "cultural_elements": string_list(data.get("cultural_elements")),
-        "cultural_context": text_or_none(data.get("cultural_context")),
-        "story": text_or_none(data.get("story")),
-        "uncertainty": uncertainty,
-        "story_disclaimer": "AI-generated cultural context, not verified historical fact.",
-    }
-
-
-def request_gemini_analysis(image_bytes: bytes, mime_type: str) -> dict[str, Any]:
-    """Send in-memory image bytes to Gemini; no local file is created."""
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError(
-            "Gemini is not configured. Add GEMINI_API_KEY to backend/.env and restart the server."
-        )
-
-    client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model=os.getenv("GEMINI_MODEL", DEFAULT_MODEL),
-        contents=[
-            ANALYSIS_PROMPT,
-            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-        ],
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.1,
-        ),
+if GEMINI_API_KEY:
+    client = genai.Client(
+        api_key=GEMINI_API_KEY
     )
-    if not response.text:
-        raise ValueError("Gemini returned an empty analysis.")
-    return clean_analysis(json.loads(response.text))
 
+
+# =========================================================
+# BASIC ROUTES
+# =========================================================
 
 @app.get("/")
-def health_check() -> dict[str, str]:
-    """Confirm that the local API is running."""
-    return {"status": "online", "message": "SanskritiX API is running"}
+def root():
+    return {
+        "project": "SanskritiX",
+        "message": "SanskritiX backend is running.",
+        "gemini_configured": client is not None
+    }
 
 
-@app.post("/api/analyze")
-async def analyze_image(
-    image: Annotated[UploadFile, File(description="A JPG, JPEG, PNG, or WEBP image")]
-) -> dict[str, Any]:
-    """Validate an upload, then ask Gemini for cautious cultural-heritage context."""
-    file_extension = get_extension(image.filename)
-    if image.content_type not in ALLOWED_CONTENT_TYPES:
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "gemini_configured": client is not None
+    }
+
+
+@app.get("/api/status")
+def api_status():
+    return {
+        "status": "ok",
+        "gemini_configured": client is not None,
+        "gemini_model": GEMINI_MODEL,
+        "gemini_image_model": GEMINI_IMAGE_MODEL
+    }
+
+
+# =========================================================
+# IMAGE VALIDATION
+# =========================================================
+
+ALLOWED_TYPES = {
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+}
+
+MAX_FILE_SIZE = 10 * 1024 * 1024
+
+
+async def read_image(file: UploadFile):
+
+    if not file.content_type:
         raise HTTPException(
-            status_code=415,
-            detail="Unsupported file type. Please upload a JPG, JPEG, PNG, or WEBP image.",
-        )
-    if file_extension not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=415,
-            detail="Unsupported file extension. Please use .jpg, .jpeg, .png, or .webp.",
+            status_code=400,
+            detail="The uploaded file has no detected image type."
         )
 
-    # Read the upload only in memory; nothing is stored permanently.
-    image_bytes = await image.read()
-    await image.close()
+    content_type = file.content_type.lower()
+
+    if content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a JPG, JPEG, PNG, WEBP, or GIF image."
+        )
+
+    image_bytes = await file.read()
+
     if not image_bytes:
-        raise HTTPException(status_code=400, detail="The uploaded image is empty.")
-    if len(image_bytes) > MAX_IMAGE_SIZE_BYTES:
         raise HTTPException(
-            status_code=413,
-            detail="Image is too large. Please upload an image smaller than 10 MB.",
+            status_code=400,
+            detail="The uploaded image is empty."
         )
+
+    if len(image_bytes) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Image size must be 10 MB or less."
+        )
+
+    return image_bytes, content_type
+
+
+# =========================================================
+# JSON HELPERS
+# =========================================================
+
+def clean_json_text(text: str) -> str:
+
+    text = text.strip()
+
+    if text.startswith("```"):
+
+        lines = text.splitlines()
+
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+
+        text = "\n".join(lines).strip()
+
+        if text.lower().startswith("json"):
+            text = text[4:].strip()
+
+    return text
+
+
+def parse_json_response(text: str):
+
+    cleaned = clean_json_text(text)
 
     try:
-        # The Google SDK is synchronous, so keep FastAPI's event loop responsive.
-        return await asyncio.to_thread(
-            request_gemini_analysis, image_bytes, image.content_type
+        return json.loads(cleaned)
+
+    except json.JSONDecodeError:
+
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+
+        if start != -1 and end != -1 and end > start:
+
+            try:
+                return json.loads(
+                    cleaned[start:end + 1]
+                )
+
+            except json.JSONDecodeError:
+                pass
+
+    raise HTTPException(
+        status_code=502,
+        detail="Gemini returned an invalid structured response."
+    )
+
+
+# =========================================================
+# ANALYZE HERITAGE PHOTOGRAPH
+# =========================================================
+
+@app.post("/api/analyze")
+async def analyze_heritage(
+    image: UploadFile = File(...)
+):
+
+    if client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="GEMINI_API_KEY is not configured. Check backend/.env."
         )
-    except RuntimeError as error:
-        # A missing local key is a setup issue, not an identification result.
-        logger.exception("Gemini analysis failed (%s): %s", type(error).__name__, error)
-        return unavailable_response(str(error))
-    except (ValueError, json.JSONDecodeError) as error:
-        logger.exception("Gemini analysis failed (%s): %s", type(error).__name__, error)
-        return unavailable_response(
-            "Gemini returned an unreadable analysis. Please try another photograph."
+
+    image_bytes, content_type = await read_image(image)
+
+    prompt = """
+You are the cultural heritage analysis engine for SanskritiX,
+an Indian cultural heritage discovery platform.
+
+Analyze the uploaded photograph carefully.
+
+The photograph may contain:
+- monuments
+- temples
+- sculptures
+- architecture
+- streets
+- crafts
+- festivals
+- cultural objects
+- landscapes
+- traditional clothing
+- religious symbols
+
+Identify the most likely cultural heritage location or subject.
+
+IMPORTANT:
+
+Do NOT blindly guess.
+
+Use visible evidence such as:
+- architecture
+- inscriptions
+- sculptures
+- symbols
+- religious iconography
+- landscape
+- clothing
+- objects
+- signs
+- distinctive structures
+
+If the exact place cannot be identified confidently,
+say so clearly.
+
+FACTUALITY RULES:
+
+1. Do not invent historical facts.
+2. Separate visible evidence from interpretation.
+3. Do not claim certainty when the photograph does not support it.
+4. Do not invent dates, rulers, dynasties, traditions, or events.
+5. If something is uncertain, mention the uncertainty.
+6. Keep historical storytelling grounded in the analysis.
+7. Do not present legends as verified historical facts.
+8. The result should be useful for a young person exploring Indian heritage.
+
+Return ONLY valid JSON.
+
+Use exactly this structure:
+
+{
+  "possible_place": "string",
+  "confidence": 0.0,
+  "summary": "short explanation",
+  "visible_evidence": [
+    "evidence 1",
+    "evidence 2"
+  ],
+  "cultural_elements": [
+    "element 1",
+    "element 2"
+  ],
+  "cultural_context": "grounded cultural explanation",
+  "history": "historical background when reasonably supported",
+  "architecture": "architectural explanation",
+  "significance": "cultural significance",
+  "traditions": "relevant traditions when reasonably supported",
+  "story": "short engaging heritage story grounded in available evidence",
+  "story_disclaimer": "short disclaimer",
+  "uncertainty": "what may be uncertain or should be verified",
+  "facts": [
+    "fact 1",
+    "fact 2"
+  ]
+}
+
+The confidence value must be between 0 and 1.
+
+If the exact location cannot be determined,
+use a cautious description instead of inventing a place.
+"""
+
+    try:
+
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type=content_type
+                ),
+                prompt
+            ]
         )
-    except Exception as error:
-        # Never expose provider internals or credentials in a response.
-        logger.exception("Gemini analysis failed (%s): %s", type(error).__name__, error)
-        return unavailable_response(
-            "The AI analysis service is temporarily unavailable. Please try again shortly."
+
+        text = response.text or ""
+
+        result = parse_json_response(text)
+
+        result.setdefault(
+            "story_disclaimer",
+            "Historical information should be verified with authoritative sources."
+        )
+
+        result.setdefault(
+            "uncertainty",
+            "AI identification may not always be certain."
+        )
+
+        return {
+            "status": "success",
+            **result
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as exc:
+
+        print(
+            "Gemini analysis error:",
+            repr(exc)
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail=f"Gemini analysis failed: {str(exc)}"
+        )
+
+
+# =========================================================
+# HISTORICAL RECONSTRUCTION
+# =========================================================
+
+@app.post("/api/reconstruct")
+async def reconstruct_history(
+
+    image: UploadFile = File(...),
+
+    possible_place: str = Form(
+        "Unknown heritage location"
+    ),
+
+    cultural_context: str = Form(""),
+
+    historical_context: str = Form("")
+):
+
+    if client is None:
+        raise HTTPException(
+            status_code=500,
+            detail="GEMINI_API_KEY is not configured. Check backend/.env."
+        )
+
+    image_bytes, content_type = await read_image(image)
+
+    prompt = f"""
+Create an AI-assisted historical visualization inspired by this
+heritage photograph.
+
+Possible place:
+{possible_place}
+
+Cultural context:
+{cultural_context}
+
+Historical context:
+{historical_context}
+
+This image is an ARTISTIC HISTORICAL RECONSTRUCTION.
+
+It is NOT a verified historical photograph.
+
+Create a historically inspired scene that is meaningfully
+different from the modern reference photograph.
+
+Where historically plausible:
+
+- remove modern vehicles
+- remove modern electrical infrastructure
+- remove modern security barriers
+- remove modern advertisements
+- remove modern signs
+- reduce modern construction
+- use historically inspired architecture
+- use traditional stone paths or courtyards
+- use historically plausible lamps
+- use appropriate traditional flags or decorations
+- use historically inspired clothing
+- create a quieter traditional atmosphere
+
+Preserve the recognizable cultural identity of the location
+when the evidence supports it.
+
+Do NOT create a generic fantasy temple.
+
+Do NOT add:
+
+- written labels
+- captions
+- watermarks
+- logos
+- modern advertisements
+- text inside the image
+- identifiable real people
+
+The image should feel like a cinematic reconstruction
+of how the place might have appeared in an earlier period.
+
+Do not imply that every visual detail is historically verified.
+"""
+
+    try:
+
+        response = client.models.generate_content(
+
+            model=GEMINI_IMAGE_MODEL,
+
+            contents=[
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type=content_type
+                ),
+                prompt
+            ],
+
+            config=types.GenerateContentConfig(
+                response_modalities=[
+                    "TEXT",
+                    "IMAGE"
+                ]
+            )
+        )
+
+        image_base64: Optional[str] = None
+
+
+        for candidate in response.candidates or []:
+
+            content = candidate.content
+
+            if not content:
+                continue
+
+            for part in content.parts or []:
+
+                inline_data = getattr(
+                    part,
+                    "inline_data",
+                    None
+                )
+
+                if inline_data and inline_data.data:
+
+                    image_base64 = base64.b64encode(
+                        inline_data.data
+                    ).decode("utf-8")
+
+                    break
+
+            if image_base64:
+                break
+
+
+        if not image_base64:
+
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    "Gemini did not return a historical image. "
+                    "Check the configured image model."
+                )
+            )
+
+
+        return {
+            "status": "success",
+            "image_base64": image_base64,
+            "disclaimer": (
+                "AI-assisted historical visualization — "
+                "artistic reconstruction, not a verified "
+                "historical photograph."
+            )
+        }
+
+
+    except HTTPException:
+        raise
+
+    except Exception as exc:
+
+        print(
+            "Gemini historical reconstruction error:",
+            repr(exc)
+        )
+
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Historical reconstruction failed: "
+                f"{str(exc)}"
+            )
         )

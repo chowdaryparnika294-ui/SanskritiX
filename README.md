@@ -43,7 +43,7 @@ The API will run at http://127.0.0.1:8000. Open http://127.0.0.1:8000/docs to te
 
 POST /api/analyze
 
-Send the image in a form-data field named image. It accepts JPG, JPEG, PNG, and WEBP files up to 10 MB. The endpoint sends the image to Gemini for cautious analysis and returns visible evidence, a possible place (or null), confidence, cultural elements, cultural context, a story, and uncertainty. Stories are AI-generated cultural context, not verified historical fact.
+Send the image in a form-data field named image. It accepts JPG, JPEG, PNG, and WEBP files up to 10 MB. The endpoint sends the image to Gemini for cautious analysis and returns visible evidence, a possible place (or null), confidence, cultural elements/context, a short story preview, a detailed story, history, architecture, cultural significance, traditions, interesting facts, and uncertainty. Stories are AI-generated cultural context, not verified historical fact.
 
 ### Gemini key safety
 
