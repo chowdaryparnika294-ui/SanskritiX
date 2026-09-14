@@ -6,6 +6,8 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from google import genai
 from google.genai import types
@@ -16,6 +18,8 @@ from google.genai import types
 # =========================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(BASE_DIR)
+
 ENV_FILE = os.path.join(BASE_DIR, ".env")
 
 load_dotenv(dotenv_path=ENV_FILE, override=True)
@@ -50,12 +54,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5501",
-        "http://localhost:5501",
-        "http://127.0.0.1:8000",
-        "http://localhost:8000",
-    ],
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,11 +74,29 @@ if GEMINI_API_KEY:
 
 
 # =========================================================
+# PATHS
+# =========================================================
+
+FRONTEND_DIR = os.path.join(
+    PROJECT_DIR,
+    "frontend"
+)
+
+INDEX_FILE = os.path.join(
+    FRONTEND_DIR,
+    "index.html"
+)
+
+
+# =========================================================
 # BASIC ROUTES
 # =========================================================
 
 @app.get("/")
 def root():
+    if os.path.exists(INDEX_FILE):
+        return FileResponse(INDEX_FILE)
+
     return {
         "project": "SanskritiX",
         "message": "SanskritiX backend is running.",
@@ -103,6 +120,68 @@ def api_status():
         "gemini_model": GEMINI_MODEL,
         "gemini_image_model": GEMINI_IMAGE_MODEL
     }
+
+
+# =========================================================
+# FRONTEND FILE ROUTES
+# =========================================================
+
+@app.get("/discover.html")
+def discover_page():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "discover.html")
+    )
+
+
+@app.get("/memory.html")
+def memory_page():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "memory.html")
+    )
+
+
+@app.get("/styles.css")
+def styles_css():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "styles.css")
+    )
+
+
+@app.get("/discover.css")
+def discover_css():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "discover.css")
+    )
+
+
+@app.get("/discover.js")
+def discover_js():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "discover.js")
+    )
+
+
+@app.get("/script.js")
+def script_js():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "script.js")
+    )
+
+
+@app.get("/memory.js")
+def memory_js():
+    memory_file = os.path.join(
+        FRONTEND_DIR,
+        "memory.js"
+    )
+
+    if os.path.exists(memory_file):
+        return FileResponse(memory_file)
+
+    raise HTTPException(
+        status_code=404,
+        detail="memory.js not found."
+    )
 
 
 # =========================================================
@@ -465,7 +544,6 @@ Do not imply that every visual detail is historically verified.
 
         image_base64: Optional[str] = None
 
-
         for candidate in response.candidates or []:
 
             content = candidate.content
@@ -492,7 +570,6 @@ Do not imply that every visual detail is historically verified.
             if image_base64:
                 break
 
-
         if not image_base64:
 
             raise HTTPException(
@@ -503,7 +580,6 @@ Do not imply that every visual detail is historically verified.
                 )
             )
 
-
         return {
             "status": "success",
             "image_base64": image_base64,
@@ -513,7 +589,6 @@ Do not imply that every visual detail is historically verified.
                 "historical photograph."
             )
         }
-
 
     except HTTPException:
         raise
@@ -532,3 +607,18 @@ Do not imply that every visual detail is historically verified.
                 f"{str(exc)}"
             )
         )
+
+
+# =========================================================
+# STATIC FRONTEND FALLBACK
+# =========================================================
+
+if os.path.isdir(FRONTEND_DIR):
+
+    app.mount(
+        "/frontend",
+        StaticFiles(
+            directory=FRONTEND_DIR
+        ),
+        name="frontend"
+    )
