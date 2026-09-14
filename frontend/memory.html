@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Sanskriti | SanskritiX</title>
+
+</head>
+
+
+<body style="
+    margin:0;
+    padding:60px;
+    background:#fffdfa;
+    color:#253531;
+    font-family:Arial,sans-serif;
+">
+
+
+    <h1 style="
+        font-family:Georgia,serif;
+        font-size:60px;
+    ">
+        My Sanskriti
+    </h1>
+
+
+    <p style="
+        color:#c45135;
+        font-size:14px;
+    ">
+        YOUR SAVED HERITAGE MEMORIES
+    </p>
+
+
+    <div id="memory-container">
+
+        Loading your saved memory...
+
+    </div>
+
+
+    <script>
+
+        console.log(
+            "MY SANSKRITI TEST PAGE IS WORKING"
+        );
+
+
+        const saved =
+            localStorage.getItem(
+                "sanskritix_memories"
+            );
+
+
+        console.log(
+            "Saved memory:",
+            saved
+        );
+
+
+        const container =
+            document.getElementById(
+                "memory-container"
+            );
+
+
+        if (!saved) {
+
+            container.innerHTML = `
+
+                <h2>
+                    No saved memory found.
+                </h2>
+
+                <p>
+                    Go back to Discover and save a heritage memory first.
+                </p>
+
+            `;
+
+        }
+
+        else {
+
+            try {
+
+                let memories =
+                    JSON.parse(saved);
+
+
+                console.log(
+                    "Parsed memory:",
+                    memories
+                );
+
+
+                if (!Array.isArray(memories)) {
+
+                    memories = [memories];
+
+                }
+
+
+                const memory =
+                    memories[memories.length - 1];
+
+
+                container.innerHTML = `
+
+                    <div style="
+                        margin-top:40px;
+                        padding:40px;
+                        background:#f4ede0;
+                        border:1px solid #d8cdbc;
+                        max-width:1000px;
+                    ">
+
+                        ${
+                            memory.image
+                            ?
+                            `
+                            <img
+                                src="${memory.image}"
+                                style="
+                                    width:45%;
+                                    max-height:500px;
+                                    object-fit:contain;
+                                    background:#253531;
+                                    float:left;
+                                    margin-right:40px;
+                                "
+                            >
+                            `
+                            :
+                            ""
+                        }
+
+
+                        <div>
+
+                            <p style="
+                                color:#c45135;
+                                font-size:11px;
+                                letter-spacing:2px;
+                            ">
+                                HERITAGE MEMORY
+                            </p>
+
+
+                            <h2 style="
+                                font-family:Georgia,serif;
+                                font-size:42px;
+                            ">
+
+                                ${memory.place || "Indian Heritage"}
+
+                            </h2>
+
+
+                            <p style="
+                                color:#596762;
+                                line-height:1.8;
+                            ">
+
+                                ${memory.summary || "Saved heritage discovery."}
+
+                            </p>
+
+
+                            <hr style="
+                                border:0;
+                                border-top:1px solid #d8cdbc;
+                                margin:25px 0;
+                            ">
+
+
+                            <p style="
+                                color:#c45135;
+                                font-size:11px;
+                                letter-spacing:2px;
+                            ">
+                                CULTURAL STORY
+                            </p>
+
+
+                            <p style="
+                                font-family:Georgia,serif;
+                                font-style:italic;
+                                font-size:18px;
+                                line-height:1.7;
+                            ">
+
+                                ${memory.story || "Your cultural story is saved here."}
+
+                            </p>
+
+
+                            <hr style="
+                                border:0;
+                                border-top:1px solid #d8cdbc;
+                                margin:25px 0;
+                            ">
+
+
+                            <p style="
+                                color:#c45135;
+                                font-size:11px;
+                                letter-spacing:2px;
+                            ">
+                                SAVED TO MY SANSKRITI
+                            </p>
+
+                        </div>
+
+
+                        <div style="clear:both;"></div>
+
+                    </div>
+
+                `;
+
+
+                console.log(
+                    "MEMORY DISPLAYED SUCCESSFULLY"
+                );
+
+            }
+
+
+            catch(error) {
+
+                console.error(
+                    "MEMORY ERROR:",
+                    error
+                );
+
+
+                container.innerHTML = `
+
+                    <h2>
+                        Error reading saved memory.
+                    </h2>
+
+                    <p>
+                        Check the browser console.
+                    </p>
+
+                `;
+
+            }
+
+        }
+
+    </script>
+
+
+</body>
+
+</html>

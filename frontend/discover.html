@@ -1,11 +1,755 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="description" content="Upload a photograph and begin discovering its heritage story with SanskritiX."><title>Discover | SanskritiX</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="discover.css"></head>
-<body><header class="header"><a class="brand" href="index.html"><b>S</b>Sanskriti<span>X</span></a><nav><a href="index.html#explore">Explore</a><a href="index.html#works">How it works</a><a href="index.html#purpose">Our purpose</a></nav><a class="back-link" href="index.html">← Back home</a></header>
-<main><section class="discover-hero shell"><p class="eyebrow">— BEGIN YOUR DISCOVERY</p><h1>What story does your<br><em>photograph hold?</em></h1><p>Upload a photograph of a monument, sculpture, craft, street, architecture, festival, or cultural object and begin discovering its story.</p></section>
-<section class="progress"><div class="shell"><div class="active"><b>01</b><span>Capture</span></div><i></i><div><b>02</b><span>Discover</span></div><i></i><div><b>03</b><span>Experience</span></div><i></i><div><b>04</b><span>Remember</span></div></div></section>
-<section class="shell capture-section"><div class="section-label"><p class="eyebrow">— STEP 01</p><h2>Show us what caught<br>your <em>eye.</em></h2></div><div class="upload-panel"><input type="file" id="photo-input" accept="image/*" hidden><div class="drop-zone" id="drop-zone" tabindex="0" role="button" aria-label="Upload a photograph"><div class="upload-icon">↑</div><h3>Drop your photograph here</h3><p>or choose a file from your device</p><button class="button" type="button" id="upload-button">Upload a photograph ↗</button><small>JPG, PNG, WEBP or GIF · stays on your device</small></div><div class="preview-area" id="preview-area" hidden><img id="image-preview" alt="Your selected heritage photograph"><div class="preview-overlay"><p>YOUR PHOTOGRAPH</p><button type="button" class="text-button" id="change-button">Change image</button><button type="button" class="text-button remove" id="remove-button">Remove</button></div></div><div class="capture-actions" id="capture-actions" hidden><p>Beautiful — your photograph is ready to explore.</p><button class="button" type="button" id="continue-button">Continue to discovery ↓</button></div></div></section>
-<section class="result-section" id="discovery-result" hidden><div class="shell"><div class="result-heading"><p class="eyebrow">— READY FOR DISCOVERY</p><h2>Your story is ready to<br><em>be uncovered.</em></h2><p>AI-powered heritage identification will analyze this photograph in the next phase.</p></div><div class="ai-ready-card"><div class="result-mark">✦</div><div><p class="result-overline">COMING IN THE AI PHASE</p><h3>Ready for AI discovery</h3><p class="result-intro">Your photograph is previewed only on this device. SanskritiX will identify cultural context after AI discovery is connected.</p></div></div><div class="placeholder-grid"><article><p>01 / POSSIBLE PLACE</p><h3>Waiting for AI analysis</h3><span>Coming in the AI phase</span></article><article><p>02 / CULTURAL ELEMENTS</p><h3>Details will appear here</h3><span>Coming in the AI phase</span></article><article><p>03 / CULTURAL STORY</p><h3>A story will take shape</h3><span>Coming in the AI phase</span></article><article><p>04 / LANGUAGE</p><h3>Choose your language</h3><span>Coming in the AI phase</span></article></div></div></section>
-<section class="story-section shell" id="story"><div class="story-art"><span>✦</span><div></div><p>STORIES<br>IN STONE</p></div><div class="story-copy"><p class="eyebrow">— CULTURAL STORY</p><h2>Every photograph has<br>a story to <em>reveal.</em></h2><div class="language"><label for="language-select">Story language</label><select id="language-select" disabled><option>English</option><option>తెలుగు</option><option>हिंदी</option><option>தமிழ்</option><option>ಕನ್ನಡ</option><option>മലയാളം</option><option>বাংলা</option><option>मराठी</option></select></div><blockquote>“Your culturally grounded story will appear here after AI-powered discovery is added in the next phase.”</blockquote><p class="story-note">COMING IN THE AI PHASE · Language and storytelling are not yet connected.</p></div></section>
-<section class="then-now"><div class="shell"><div class="then-now-head"><div><p class="eyebrow">— EXPERIENCE THE CHANGE</p><h2>Then & <em>Now.</em></h2></div><p>See the heritage you encounter today alongside a carefully marked future reconstruction.</p></div><div class="comparison"><article class="now-panel"><div class="panel-tag">NOW</div><div class="empty-now" id="empty-now">Your uploaded photograph<br>will appear here</div><img id="now-image" alt="Your photograph in the Then and Now comparison" hidden></article><article class="then-panel"><div class="panel-tag">THEN</div><div><span>✦</span><h3>AI historical visualization<br>will appear here.</h3><p>Future images will be AI-assisted reconstructions — interpretive visualizations, not verified historical photographs.</p></div></article></div></div></section>
-<section class="remember shell"><div><p class="eyebrow">— STEP 04</p><h2>Keep the story<br>close to <em>you.</em></h2><p>In the next phase, your discoveries will become a personal collection of heritage memories.</p></div><button class="button" id="save-button" type="button">Save to My Sanskriti ♡</button><p class="save-message" id="save-message" aria-live="polite"></p></section></main>
-<footer class="shell"><a class="brand" href="index.html"><b>S</b>Sanskriti<span>X</span></a><p>Built with curiosity for Smart India Hackathon 2026.</p><a href="#">Back to top ↑</a></footer><script src="discover.js"></script></body></html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Upload a photograph and begin discovering its heritage story with SanskritiX."
+    >
+
+    <title>Discover | SanskritiX</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Mono&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="stylesheet" href="discover.css">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header class="header">
+
+    <a class="brand" href="index.html">
+        <b>S</b>Sanskriti<span>X</span>
+    </a>
+
+    <nav>
+
+        <a href="index.html#explore">
+            Explore
+        </a>
+
+        <a href="index.html#works">
+            How it works
+        </a>
+
+        <a href="index.html#purpose">
+            Our purpose
+        </a>
+
+    </nav>
+
+    <a class="back-link" href="index.html">
+        &larr; Back home
+    </a>
+
+</header>
+
+
+
+<main>
+
+
+<!-- =====================================================
+     HERO
+     ===================================================== -->
+
+<section class="discover-hero shell">
+
+    <p class="eyebrow">
+        &mdash; BEGIN YOUR DISCOVERY
+    </p>
+
+    <h1>
+        What story does your<br>
+        <em>photograph hold?</em>
+    </h1>
+
+    <p>
+        Upload a photograph of a monument, sculpture,
+        craft, street, architecture, festival, or cultural
+        object and begin discovering its story.
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     PROGRESS
+     ===================================================== -->
+
+<section class="progress">
+
+    <div class="shell">
+
+        <div class="active">
+            <b>01</b>
+            <span>Capture</span>
+        </div>
+
+        <i></i>
+
+        <div>
+            <b>02</b>
+            <span>Discover</span>
+        </div>
+
+        <i></i>
+
+        <div>
+            <b>03</b>
+            <span>Experience</span>
+        </div>
+
+        <i></i>
+
+        <div>
+            <b>04</b>
+            <span>Remember</span>
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STEP 01 — CAPTURE
+     ===================================================== -->
+
+<section class="shell capture-section">
+
+    <div class="section-label">
+
+        <p class="eyebrow">
+            &mdash; STEP 01
+        </p>
+
+        <h2>
+            Show us what caught<br>
+            your <em>eye.</em>
+        </h2>
+
+    </div>
+
+
+    <div class="upload-panel">
+
+        <input
+            type="file"
+            id="photo-input"
+            accept="image/*"
+            hidden
+        >
+
+
+        <!-- DROP ZONE -->
+
+        <div
+            class="drop-zone"
+            id="drop-zone"
+            tabindex="0"
+            role="button"
+            aria-label="Upload a photograph"
+        >
+
+            <div class="upload-icon">
+                &uarr;
+            </div>
+
+            <h3>
+                Drop your photograph here
+            </h3>
+
+            <p>
+                or choose a file from your device
+            </p>
+
+            <button
+                class="button"
+                type="button"
+                id="upload-button"
+            >
+                Upload a photograph &nearr;
+            </button>
+
+            <small>
+                JPG, PNG, WEBP or GIF &middot;
+                stays on your device
+            </small>
+
+        </div>
+
+
+
+        <!-- IMAGE PREVIEW -->
+
+        <div
+            class="preview-area"
+            id="preview-area"
+            hidden
+        >
+
+            <img
+                id="image-preview"
+                alt="Your selected heritage photograph"
+            >
+
+            <div class="preview-overlay">
+
+                <p>
+                    YOUR PHOTOGRAPH
+                </p>
+
+                <button
+                    type="button"
+                    class="text-button"
+                    id="change-button"
+                >
+                    Change image
+                </button>
+
+                <button
+                    type="button"
+                    class="text-button remove"
+                    id="remove-button"
+                >
+                    Remove
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- CAPTURE ACTIONS -->
+
+        <div
+            class="capture-actions"
+            id="capture-actions"
+            hidden
+        >
+
+            <p>
+                Beautiful &mdash; your photograph
+                is ready to explore.
+            </p>
+
+            <button
+                class="button"
+                type="button"
+                id="continue-button"
+            >
+                Continue to discovery &darr;
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STEP 02 — DISCOVER
+     ===================================================== -->
+
+<section
+    class="result-section"
+    id="discovery-result"
+    hidden
+    aria-live="polite"
+>
+
+    <div class="shell">
+
+
+        <div class="result-heading">
+
+            <div>
+
+                <p
+                    class="eyebrow"
+                    id="result-eyebrow"
+                >
+                    &mdash; HERITAGE DISCOVERY
+                </p>
+
+                <h2 id="result-title">
+                    Discovering your<br>
+                    <em>heritage...</em>
+                </h2>
+
+            </div>
+
+
+            <p id="result-summary">
+                Gemini is carefully analyzing the
+                visual evidence in your photograph.
+            </p>
+
+        </div>
+
+
+
+        <!-- LOADING -->
+
+        <div
+            class="analysis-loading"
+            id="analysis-loading"
+        >
+
+            <span></span>
+
+            <p>
+                Discovering your heritage...
+            </p>
+
+            <small>
+                This can take a few moments.
+            </small>
+
+        </div>
+
+
+
+        <!-- ERROR -->
+
+        <div
+            class="analysis-error"
+            id="analysis-error"
+            hidden
+        >
+
+            <h3>
+                We could not complete the discovery.
+            </h3>
+
+            <p id="analysis-error-message">
+                Please check that the local API
+                is running and try again.
+            </p>
+
+            <button
+                class="button"
+                id="retry-button"
+                type="button"
+            >
+                Try again &nearr;
+            </button>
+
+        </div>
+
+
+
+        <!-- ANALYSIS CONTENT -->
+
+        <div
+            id="analysis-content"
+            hidden
+        >
+
+
+            <!-- AI RESULT CARD -->
+
+            <div class="ai-ready-card">
+
+                <div class="result-mark">
+                    &#10022;
+                </div>
+
+                <div>
+
+                    <p class="result-overline">
+                        POSSIBLE PLACE
+                    </p>
+
+                    <h3 id="possible-place">
+                        Waiting for analysis
+                    </h3>
+
+                    <p
+                        class="result-intro"
+                        id="confidence-text"
+                    ></p>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ANALYSIS GRID -->
+
+            <div class="analysis-grid">
+
+
+                <article>
+
+                    <p>
+                        VISIBLE EVIDENCE
+                    </p>
+
+                    <ul id="visible-evidence"></ul>
+
+                </article>
+
+
+
+                <article>
+
+                    <p>
+                        CULTURAL ELEMENTS
+                    </p>
+
+                    <ul id="cultural-elements"></ul>
+
+                </article>
+
+
+
+                <article>
+
+                    <p>
+                        CULTURAL CONTEXT
+                    </p>
+
+                    <div id="cultural-context"></div>
+
+                </article>
+
+
+
+                <article>
+
+                    <p>
+                        UNCERTAINTY
+                    </p>
+
+                    <div id="uncertainty"></div>
+
+                </article>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STEP 03 — CULTURAL STORY
+     ===================================================== -->
+
+<section
+    class="story-section shell"
+    id="story"
+>
+
+    <div class="story-art">
+
+        <span>
+            &#10022;
+        </span>
+
+        <div></div>
+
+        <p>
+            STORIES<br>
+            IN STONE
+        </p>
+
+    </div>
+
+
+
+    <div class="story-copy">
+
+        <p class="eyebrow">
+            &mdash; CULTURAL STORY
+        </p>
+
+        <h2>
+            Every photograph has<br>
+            a story to <em>reveal.</em>
+        </h2>
+
+
+        <div class="language">
+
+            <label for="language-select">
+                Story language
+            </label>
+
+            <select
+                id="language-select"
+                disabled
+            >
+
+                <option>English</option>
+                <option>Telugu</option>
+                <option>Hindi</option>
+                <option>Tamil</option>
+                <option>Kannada</option>
+                <option>Malayalam</option>
+                <option>Bengali</option>
+                <option>Marathi</option>
+
+            </select>
+
+        </div>
+
+
+        <blockquote id="story-text">
+            Your AI-generated cultural context
+            will appear here after analysis.
+        </blockquote>
+
+
+        <p
+            class="story-note"
+            id="story-disclaimer"
+        >
+            AI-generated cultural context,
+            not verified historical fact.
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STEP 03 — THEN & NOW
+     ===================================================== -->
+
+<section class="then-now">
+
+    <div class="shell">
+
+
+        <div class="then-now-head">
+
+            <div>
+
+                <p class="eyebrow">
+                    &mdash; EXPERIENCE THE CHANGE
+                </p>
+
+                <h2>
+                    Then &amp; <em>Now.</em>
+                </h2>
+
+            </div>
+
+            <p>
+                See the heritage you encounter today
+                alongside a carefully marked
+                historical reconstruction.
+            </p>
+
+        </div>
+
+
+
+        <div class="comparison">
+
+
+            <!-- NOW -->
+
+            <article class="now-panel">
+
+                <div class="panel-tag">
+                    NOW
+                </div>
+
+                <div
+                    class="empty-now"
+                    id="empty-now"
+                >
+                    Your uploaded photograph<br>
+                    will appear here
+                </div>
+
+                <img
+                    id="now-image"
+                    alt="Your photograph in the Then and Now comparison"
+                    hidden
+                >
+
+            </article>
+
+
+
+            <!-- THEN -->
+
+            <article class="then-panel">
+
+                <div class="panel-tag">
+                    THEN
+                </div>
+
+                <div class="then-empty-content">
+
+                    <span>
+                        &#10022;
+                    </span>
+
+                    <h3>
+                        AI historical visualization
+                        will appear here.
+                    </h3>
+
+                    <p>
+                        Future images will be
+                        AI-assisted reconstructions
+                        &mdash; interpretive visualizations,
+                        not verified historical photographs.
+                    </p>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     STEP 04 — REMEMBER
+     ===================================================== -->
+
+<section
+    class="remember shell"
+    id="remember"
+>
+
+
+    <div>
+
+        <p class="eyebrow">
+            &mdash; STEP 04
+        </p>
+
+        <h2>
+            Keep the story<br>
+            close to <em>you.</em>
+        </h2>
+
+        <p>
+            Save the heritage discoveries you make
+            and build your own personal collection
+            of cultural memories.
+        </p>
+
+    </div>
+
+
+
+    <!-- SAVE BUTTON -->
+
+    <button
+        class="button"
+        id="save-button"
+        type="button"
+        disabled
+    >
+        Save to My Sanskriti &#9825;
+    </button>
+
+
+
+    <!-- SAVE MESSAGE -->
+
+    <p
+        class="save-message"
+        id="save-message"
+        aria-live="polite"
+    ></p>
+
+
+
+    <!-- MY SANSKRITI MEMORY -->
+
+    <div
+        class="my-sanskriti-memory"
+        id="my-sanskriti-memory"
+        hidden
+    ></div>
+
+
+</section>
+
+
+
+</main>
+
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer class="shell">
+
+    <a class="brand" href="index.html">
+        <b>S</b>Sanskriti<span>X</span>
+    </a>
+
+    <p>
+        Built with curiosity for
+        Smart India Hackathon 2026.
+    </p>
+
+    <a href="#">
+        Back to top &uarr;
+    </a>
+
+</footer>
+
+
+
+<script src="discover.js"></script>
+
+</body>
+
+</html>
