@@ -1,0 +1,32 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/discover.html",
+      "destination": "/frontend/discover.html"
+    },
+    {
+      "source": "/memory.html",
+      "destination": "/frontend/memory.html"
+    },
+    {
+      "source": "/styles.css",
+      "destination": "/frontend/styles.css"
+    },
+    {
+      "source": "/discover.css",
+      "destination": "/frontend/discover.css"
+    },
+    {
+      "source": "/discover.js",
+      "destination": "/frontend/discover.js"
+    },
+    {
+      "source": "/script.js",
+      "destination": "/frontend/script.js"
+    }
+  ]
+}
