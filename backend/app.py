@@ -168,6 +168,27 @@ def script_js():
     )
 
 
+@app.get("/auth.js")
+def auth_js():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "auth.js")
+    )
+
+
+@app.get("/firebase-config.js")
+def firebase_config_js():
+    return FileResponse(
+        os.path.join(FRONTEND_DIR, "firebase-config.js")
+    )
+
+
+@app.get("/data/heritage-data.js")
+def heritage_data_js():
+    return FileResponse(
+        os.path.join(PROJECT_DIR, "data", "heritage-data.js")
+    )
+
+
 @app.get("/memory.js")
 def memory_js():
     memory_file = os.path.join(

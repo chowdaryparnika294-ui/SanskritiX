@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>My Sanskriti | SanskritiX</title>
+    <link rel="stylesheet" href="styles.css">
 
 </head>
 
@@ -20,6 +21,16 @@
     font-family:Arial,sans-serif;
 ">
 
+
+    <header class="header" style="width:100%; height:auto; min-height:42px; margin-bottom:42px;">
+        <a class="brand" href="index.html"><b>S</b>Sanskriti<span>X</span></a>
+        <div class="header-actions">
+            <a class="back-link" href="index.html">&larr; Back home</a>
+            <span class="account-name" data-account-name hidden></span>
+            <button class="auth-button" type="button" data-login-button>Log in</button>
+            <button class="auth-button" type="button" data-logout-button hidden>Log out</button>
+        </div>
+    </header>
 
     <h1 style="
         font-family:Georgia,serif;
@@ -258,6 +269,8 @@
 
     </script>
 
+    <p class="auth-status" data-auth-status aria-live="polite">Checking your account…</p>
+    <script type="module" src="auth.js"></script>
 
 </body>
 

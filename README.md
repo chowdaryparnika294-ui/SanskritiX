@@ -52,3 +52,15 @@ Copy backend/.env.example to backend/.env and replace only GEMINI_API_KEY with y
 ## Next steps
 
 Connect the existing Discover page to the API response, then add a verified heritage knowledge layer and saved memories.
+
+## Firebase authentication and user profiles
+
+SanskritiX uses Firebase Authentication with Google sign-in. The top-right **Log in** button signs a visitor in; it changes to **Log out** when Firebase restores or completes a session. On sign-in, the app creates or updates only that visitor's profile at `users/{uid}` in Cloud Firestore (UID, display name, email, avatar URL, and login timestamps).
+
+Before publishing, enable **Google** in Firebase Console → Authentication → Sign-in method and add your deployment domain to Authentication → Settings → Authorized domains. Deploy the included private-by-default Firestore policy from the project root:
+
+    firebase deploy --only firestore:rules
+
+The policy in `firestore.rules` allows an authenticated user to read, create, update, or delete only their own `users/{uid}` document. It denies all other Firestore access. Do not relax these rules to public access when adding memories; instead, add a user-scoped collection and an explicit owner check.
+
+When serving through the FastAPI app, the authentication modules and local heritage data are also available at `/auth.js`, `/firebase-config.js`, and `/data/heritage-data.js`.
