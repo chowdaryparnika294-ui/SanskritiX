@@ -23,6 +23,14 @@ No installation is needed.
 
 You may optionally use VS Code's Live Server extension while developing.
 
+## Vercel deployment
+
+The Vercel configuration maps both `/` and `/index.html` to the landing page, so
+visiting either URL loads the website instead of a JSON `Not Found` response. It
+also exposes the frontend's JavaScript modules and local heritage data at the
+root-relative URLs used by the pages. The FastAPI app is exported from
+`api/index.py` as the Vercel serverless entry point.
+
 ## Run the backend locally
 
 Install Python 3.10 or newer, then run the following from the SanskritiX project root:

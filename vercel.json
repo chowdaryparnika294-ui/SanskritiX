@@ -5,6 +5,10 @@
       "destination": "/frontend/index.html"
     },
     {
+      "source": "/index.html",
+      "destination": "/frontend/index.html"
+    },
+    {
       "source": "/discover.html",
       "destination": "/frontend/discover.html"
     },
@@ -27,6 +31,18 @@
     {
       "source": "/script.js",
       "destination": "/frontend/script.js"
+    },
+    {
+      "source": "/auth.js",
+      "destination": "/frontend/auth.js"
+    },
+    {
+      "source": "/firebase-config.js",
+      "destination": "/frontend/firebase-config.js"
+    },
+    {
+      "source": "/data/heritage-data.js",
+      "destination": "/data/heritage-data.js"
     }
   ]
 }
